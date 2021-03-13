@@ -1,0 +1,737 @@
+#include "p16F628a.inc"    
+ __CONFIG _FOSC_INTOSCCLK & _WDTE_OFF & _PWRTE_OFF & _MCLRE_ON & _BOREN_OFF & _LVP_OFF & _CPD_OFF & _CP_OFF 
+
+RES_VECT  CODE    0x00000000; processor reset vector  
+    GOTO    START                   ; go to beginning of program
+INT_VECT CODE 0x0004 ; interrupt vector
+ 
+    DECFSZ CNT
+    GOTO $+7
+    CALL melody
+    INCF note
+    MOVLW d'10'
+    MOVWF CNT
+ 
+ 
+    MOVLW D'20'
+    MOVWF TMR0
+    BCF INTCON, T0IF
+    retfie
+    
+    GOTO    START
+    
+MAIN_PROG CODE   
+ 
+START
+ 
+CNT equ 0x20
+note equ 0x21
+i equ 0x30
+j equ 0x31
+k equ 0x32
+ii equ 0x33
+jj equ 0x34
+kk equ 0x35
+
+START
+ 
+    MOVLW 0x07 ;Apagar comparadores
+    MOVWF CMCON
+    BSF STATUS, RP0
+    MOVLW 0x00
+    MOVWF TRISA
+    MOVLW b'00000000'
+    MOVWF TRISB
+    MOVLW b'00000101'
+    MOVWF T2CON
+    MOVLW b'00111111'
+    MOVWF CCP1CON
+    movlw b'10000111'
+    movwf OPTION_REG
+    BCF STATUS, RP0 ; BANK 0
+ 
+    bsf INTCON, GIE ; enable global interrupt
+    bsf INTCON, T0IE ; enable TMR0 interrupt
+    bcf INTCON, T0IF
+
+ 
+    MOVLW D'60' ; preload value
+    MOVWF TMR0
+    MOVLW D'10' ; 50mS * 20 = 1 Sec.
+    MOVWF CNT
+    CLRF PORTA
+    CLRF PORTB
+    CLRF note
+
+inicio:
+    
+    BCF PORTB,7
+    CALL tiempo
+    
+    BSF PORTB,7
+    CALL tiempo
+    
+    GOTO inicio
+    
+ 
+    tiempo:
+	MOVFW i
+	movwf ii
+    iloop: movfw j
+	    movwf jj
+    jloop: decfsz jj
+	    goto jloop
+	    decfsz ii
+	    goto iloop
+	    movfw k
+	    movwf kk
+	    decfsz kk
+	    goto $-1
+	    return
+	    
+    melody:
+    
+    movfw note
+    xorlw 0x60
+    btfss STATUS,Z
+    goto $+2
+    clrf note
+    
+    ;do
+    movfw note
+    xorlw 0x00
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'13'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'11'
+    MOVWF k
+   
+    ;sol
+   movfw note
+    xorlw 0x01
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;si
+    movfw note
+    xorlw 0x02
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'7'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'5'
+    MOVWF k
+    
+    ;fa#
+    movfw note
+    xorlw 0x03
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+    
+    movfw note
+    xorlw 0x04
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'13'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'11'
+    MOVWF k
+   
+   movfw note
+    xorlw 0x05
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    movfw note
+    xorlw 0x06
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'7'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'5'
+    MOVWF k
+    
+    movfw note
+    xorlw 0x07
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+
+    ;do
+    movfw note
+    xorlw 0x08
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'13'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'11'
+    MOVWF k
+   
+   movfw note
+    xorlw 0x09
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    movfw note
+    xorlw 0x10
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'7'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'5'
+    MOVWF k
+    
+    movfw note
+    xorlw 0x11
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+    
+    movfw note
+    xorlw 0x12
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'13'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'11'
+    MOVWF k
+   
+   movfw note
+    xorlw 0x13
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    movfw note
+    xorlw 0x14
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'7'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'5'
+    MOVWF k
+    
+    movfw note
+    xorlw 0x15
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x16
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x17
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;mi
+    movfw note
+    xorlw 0x18
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'24'
+    MOVWF k
+    
+    ;mi
+    movfw note
+    xorlw 0x19
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'24'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x20
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;fa#
+    movfw note
+    xorlw 0x21
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+    
+    ;si
+    movfw note
+    xorlw 0x22
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'7'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'5'
+    MOVWF k
+    
+    ;do
+    movfw note
+    xorlw 0x23
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'13'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'11'
+    MOVWF k
+    
+    ;do
+    movfw note
+    xorlw 0x24
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'13'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'11'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x25
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x26
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;fa#
+    movfw note
+    xorlw 0x27
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+    
+    ;fa#
+    movfw note
+    xorlw 0x28
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+    
+    ;si
+    movfw note
+    xorlw 0x29
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'7'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'5'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x30
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;fa#
+    movfw note
+    xorlw 0x31
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+    
+    ;si
+    movfw note
+    xorlw 0x32
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'7'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'5'
+    MOVWF k
+    
+    ;do
+    movfw note
+    xorlw 0x33
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'13'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'11'
+    MOVWF k
+    
+    ;do
+    movfw note
+    xorlw 0x34
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'13'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'11'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x35
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x36
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;mi
+    movfw note
+    xorlw 0x37
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'24'
+    MOVWF k
+    
+    ;mi
+    movfw note
+    xorlw 0x38
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'24'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x39
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;fa#
+    movfw note
+    xorlw 0x40
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+    
+    ;mi
+    movfw note
+    xorlw 0x41
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'24'
+    MOVWF k
+    
+    ;si
+    movfw note
+    xorlw 0x42
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'7'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'5'
+    MOVWF k
+    
+    ;do
+    movfw note
+    xorlw 0x43
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'13'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'11'
+    MOVWF k
+    
+    ;do
+    movfw note
+    xorlw 0x44
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'13'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'11'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x45
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x46
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;fa#
+    movfw note
+    xorlw 0x47
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+    
+    ;fa#
+    movfw note
+    xorlw 0x48
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+    
+    ;si
+    movfw note
+    xorlw 0x49
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'7'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'5'
+    MOVWF k
+    
+    ;sol
+    movfw note
+    xorlw 0x50
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'8'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'15'
+    MOVWF k
+    
+    ;fa#
+    movfw note
+    xorlw 0x51
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'9'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'10'
+    MOVWF k
+    
+    ;si
+    movfw note
+    xorlw 0x52
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'7'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'5'
+    MOVWF k
+    
+    ;do
+    movfw note
+    xorlw 0x53
+    btfss STATUS,Z
+    goto $+6
+    MOVLW d'13'
+    MOVWF i
+    MOVLW d'10'
+    MOVWF j
+    MOVLW d'11'
+    MOVWF k
+    return
+   END

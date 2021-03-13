@@ -1,0 +1,448 @@
+#include "p16F887.inc"   ; TODO INSERT CONFIG CODE HERE USING CONFIG BITS GENERATOR
+ 	__CONFIG	_CONFIG1,	_INTRC_OSC_NOCLKOUT & _WDT_OFF & _PWRTE_OFF & _MCLRE_ON & _CP_OFF & _CPD_OFF & _BOR_OFF & _IESO_ON & _FCMEN_ON & _LVP_OFF 
+ 	__CONFIG	_CONFIG2,	_BOR40V & _WRT_OFF
+
+RES_VECT  CODE    0x0000            ; processor reset vector
+;    GOTO    START                   ; go to beginning of program
+;
+;    BCF PORTC,0		;reset
+;    MOVLW 0x01
+;    MOVWF PORTD
+;    
+;    BSF PORTC,1		;exec
+;    CALL time
+;    BCF PORTC,1
+;    CALL time
+  
+    GOTO    START
+
+; -----------------------------------Inicio Interrupcion------------------------
+INT_VECT CODE 0x0004
+
+    DECFSZ CNT
+    GOTO $+17
+    ;--------------------S2
+    CLRF band
+    MOVFW s2
+    MOVWF factn
+    MOVLW '9'
+    MOVWF fact
+    
+    call xorch
+    
+    BTFSS band,0
+    call s2cero
+    
+    BTFSC band,0
+    INCF s2
+    ;-------------------S1
+    BTFSS band,0
+    call s1ch
+    ;-------------------M2
+    BTFSS band,0
+    call m2ch
+    ;-------------------M1
+    BTFSS band,0
+    call m1ch
+    ;-------------------H2
+    BTFSS band,0
+    call h2ch
+    ;-------------------H1
+    BTFSS band,0
+    call h1ch
+ 
+    MOVLW D'22' ; 50mS * value
+    MOVWF CNT
+    ; 256uS * 195 =~ 50mS
+    ; 255 - 195 = 60
+    MOVLW D'95' ; preload value
+    MOVWF TMR0
+    bcf INTCON, T0IF ; clr TMR0 interrupt flag
+
+RETFIE
+; -----------------------------------Fin Interrupcion------------------------
+    
+MAIN_PROG CODE                      ; let linker place main program
+
+START
+
+h1 equ 0x30
+h2 equ 0x31
+ 
+m1 equ 0x32
+m2 equ 0x33
+ 
+s1 equ 0x34
+s2 equ 0x35
+
+i equ 0x36
+j equ 0x37
+ 
+fact equ 0x38
+band equ 0x39
+ 
+factn equ 0x40
+ 
+CNT equ 0x41
+ 
+START
+
+BANKSEL PORTA ;
+    CLRF PORTA ;Init PORTA
+    BANKSEL ANSEL ;
+    CLRF ANSEL ;digital I/O
+    CLRF ANSELH
+    BANKSEL TRISA ;
+    MOVLW b'10010000'
+    MOVWF INTCON
+    MOVLW b'00000001'
+    MOVWF TRISB 
+    CLRF TRISC
+    CLRF TRISD
+    CLRF TRISE
+    BCF STATUS,RP1
+    BCF STATUS,RP0
+    BCF PORTC,1
+    BCF PORTC,0
+    
+    BSF STATUS, RP0
+    movlw b'10000111'
+    movwf OPTION_REG
+    BCF STATUS, RP0 ; BANK 0
+    
+    ; setup TMR0 INT
+    bsf INTCON, GIE ; enable global interrupt
+    bsf INTCON, T0IE ; enable TMR0 interrupt
+    bcf INTCON, T0IF ; clr TMR0 interrupt flag to turn on,
+    ; must be cleared after interrupt
+    ; 256uS * 195 =~ 50mS
+    ; 255 - 195 = 60
+    MOVLW D'60' ; preload value
+    MOVWF TMR0
+    MOVLW D'10' ; 50mS * 20 = 1 Sec.
+    MOVWF CNT
+    CLRF PORTA
+    CLRF PORTB
+    
+INITLCD
+    BCF PORTC,0		;reset
+    MOVLW 0x01
+    MOVWF PORTD
+    
+    BSF PORTC,1		;exec
+    CALL time
+    BCF PORTC,1
+    CALL time
+    
+    MOVLW 0x0C		;first line
+    MOVWF PORTD
+    
+    BSF PORTC,1		;exec
+    CALL time
+    BCF PORTC,1
+    CALL time
+         
+    MOVLW 0x3C		;cursor mode
+    MOVWF PORTD
+    
+    BSF PORTC,1		;exec
+    CALL time
+    BCF PORTC,1
+    CALL time
+    
+    
+INICIO	
+
+;    0x80		;LCD position
+;    0xC8		;LCD position 
+;    0x90		;LCD position 
+    
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    MOVLW '2'
+    MOVWF h1
+    MOVLW '3'
+    MOVWF h2
+    MOVLW '5'
+    MOVWF m1
+    MOVLW '9'
+    MOVWF m2
+    MOVLW '4'
+    MOVWF s1
+    MOVLW '9'
+    MOVWF s2
+    
+    BCF PORTC,0		;command mode
+    CALL time
+    
+    MOVLW 0xC0		;LCD position 
+    MOVWF PORTD
+    CALL exec
+    
+    BSF PORTC,0		;data mode
+    CALL time
+    
+  
+    MOVLW 'L'
+    MOVWF PORTD
+    CALL exec
+    MOVLW 'a'
+    MOVWF PORTD
+    CALL exec
+    MOVLW ' '
+    MOVWF PORTD
+    CALL exec
+    MOVLW 'h'
+    MOVWF PORTD
+    CALL exec
+    MOVLW 'o'
+    MOVWF PORTD
+    CALL exec
+    MOVLW 'r'
+    MOVWF PORTD
+    CALL exec
+    MOVLW 'a'
+    MOVWF PORTD
+    CALL exec
+    MOVLW ' '
+    MOVWF PORTD
+    CALL exec
+    MOVLW 'e'
+    MOVWF PORTD
+    CALL exec
+    MOVLW 's'
+    MOVWF PORTD
+    CALL exec
+    MOVLW ':'
+    MOVWF PORTD
+    CALL exec
+    
+HORA     
+    BCF PORTC,0		;command mode
+    CALL time
+    
+    MOVLW 0x94		;LCD position 
+    MOVWF PORTD
+    CALL exec
+    
+    BSF PORTC,0		;data mode
+    CALL time
+    
+  
+    MOVFW h1
+    MOVWF PORTD
+    CALL exec
+    MOVFW h2
+    MOVWF PORTD
+    CALL exec
+    MOVLW ':'
+    MOVWF PORTD
+    CALL exec
+    MOVFW m1
+    MOVWF PORTD
+    CALL exec
+    MOVFW m2
+    MOVWF PORTD
+    CALL exec
+    MOVLW ':'
+    MOVWF PORTD
+    CALL exec
+    MOVFW s1
+    MOVWF PORTD
+    CALL exec
+    MOVFW s2
+    MOVWF PORTD
+    CALL exec
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+    BCF PORTC,0		;command mode
+    CALL time
+    
+    MOVLW 0x81		;LCD position
+    MOVWF PORTD
+    CALL exec
+    
+    GOTO HORA
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;FUNCIONES;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+exec
+    BSF PORTC,1		;exec
+    CALL time
+    BCF PORTC,1
+    CALL time
+    RETURN
+    
+time
+    CLRF i
+    MOVLW d'10'
+    MOVWF j
+ciclo    
+    MOVLW d'80'
+    MOVWF i
+    DECFSZ i
+    GOTO $-1
+    DECFSZ j
+    GOTO ciclo
+    RETURN
+    
+s2cero:
+    MOVLW '0'
+    MOVWF s2
+    return
+    
+xorch:
+    BCF band,0
+    MOVFW factn
+    XORWF fact,1
+    
+    BTFSC fact,0
+    BSF band,0
+    BTFSC fact,1
+    BSF band,0
+    BTFSC fact,2
+    BSF band,0
+    BTFSC fact,3
+    BSF band,0
+    BTFSC fact,4
+    BSF band,0
+    BTFSC fact,5
+    BSF band,0
+    BTFSC fact,6
+    BSF band,0
+    BTFSC fact,7
+    BSF band,0
+    return
+    
+s1ch:
+    CLRF band
+    MOVFW s1
+    MOVWF factn
+    MOVLW '5'
+    MOVWF fact
+    
+    call xorch
+    
+    BTFSS band,0
+    call s1cero
+    
+    BTFSC band,0
+    INCF s1
+    return
+    
+s1cero:
+    MOVLW '0'
+    MOVWF s1
+    return
+    
+m2ch:
+    CLRF band
+    MOVFW m2
+    MOVWF factn
+    MOVLW '9'
+    MOVWF fact
+    
+    call xorch
+    
+    BTFSS band,0
+    call m2cero
+    
+    BTFSC band,0
+    INCF m2
+    return
+    
+m2cero:
+    MOVLW '0'
+    MOVWF m2
+    return
+    
+m1ch:
+    CLRF band
+    MOVFW m1
+    MOVWF factn
+    MOVLW '5'
+    MOVWF fact
+    
+    call xorch
+    
+    BTFSS band,0
+    call m1cero
+    
+    BTFSC band,0
+    INCF m1
+    return
+    
+m1cero:
+    MOVLW '0'
+    MOVWF m1
+    return
+    
+h2ch:
+    ;-----------24
+    CLRF band
+    MOVFW h1
+    MOVWF factn
+    MOVLW '2'
+    MOVWF fact
+    
+    call xorch
+    
+    BTFSC band,0
+    GOTO NO24
+    
+    CLRF band
+    MOVFW h2
+    MOVWF factn
+    MOVLW '3'
+    MOVWF fact
+    
+    call xorch
+    
+    BTFSS band,0
+    call h2cero
+    
+    BTFSC band,0
+    INCF h2
+    
+    return
+    ;--------NO 24
+NO24    
+    CLRF band
+    MOVFW h2
+    MOVWF factn
+    MOVLW '9'
+    MOVWF fact
+    
+    call xorch
+    
+    BTFSS band,0
+    call h2cero
+    
+    BTFSC band,0
+    INCF h2
+    return
+    
+h2cero:
+    MOVLW '0'
+    MOVWF h2
+    return
+    
+h1ch:
+    CLRF band
+    MOVFW h1
+    MOVWF factn
+    MOVLW '2'
+    MOVWF fact
+    
+    call xorch
+    
+    BTFSS band,0
+    call h1cero
+    
+    BTFSC band,0
+    INCF h1
+    return
+    
+h1cero:
+    MOVLW '0'
+    MOVWF h1
+    return
+ END

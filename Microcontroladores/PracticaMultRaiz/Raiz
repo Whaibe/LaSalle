@@ -1,0 +1,142 @@
+#include "p16F628a.inc"    ;incluir librerias relacionadas con el dispositivo
+ __CONFIG _FOSC_INTOSCCLK & _WDTE_OFF & _PWRTE_OFF & _MCLRE_OFF & _BOREN_OFF & _LVP_OFF & _CPD_OFF & _CP_OFF    
+;configuración del dispositivotodo en OFF y la frecuencia de oscilador
+;es la del "reloj del oscilador interno" (INTOSCCLK)     
+
+RES_VECT  CODE    0x0000            ; processor reset vector
+    GOTO    START                   ; go to beginning of program
+; TODO ADD INTERRUPTS HERE IF USED
+MAIN_PROG CODE                      ; let linker place main program
+
+num equ 0x30
+rs equ 0x31
+fact1 equ 0x32
+fact2 equ 0x33
+band equ 0x34 
+over equ 0x35
+
+START              ;inicio global del programa
+    MOVLW 0x07         ;Apagar comparadores para trabajar en modo digital
+    MOVWF CMCON    
+    BCF STATUS, RP1    ;Cambiar al banco 1 apagando el RP1
+    BSF STATUS, RP0    ;Y encendiendo el RP0
+    MOVLW b'11111111'
+    MOVWF TRISA
+    MOVLW b'00000000'  ;Establecer puerto B como salida (los 8 bits del puerto)
+    MOVWF TRISB  
+    BCF STATUS, RP0    ;Regresar al banco 0 apagando el RP0
+
+    
+INICIO
+    CLRF rs
+    MOVFW PORTA
+    MOVWF num
+    
+    BSF rs,7
+    call multi
+    BTFSC band,0
+    BCF rs,7
+    
+    BSF rs,6
+    call multi
+    BTFSC band,0
+    BCF rs,6
+    
+    BSF rs,5
+    call multi
+    BTFSC band,0
+    BCF rs,5
+    
+    BSF rs,4
+    call multi
+    BTFSC band,0
+    BCF rs,4
+    
+    BSF rs,3
+    call multi
+    BTFSC band,0
+    BCF rs,3
+    
+    BSF rs,2
+    call multi
+    BTFSC band,0
+    BCF rs,2
+    
+    BSF rs,1
+    call multi
+    BTFSC band,0
+    BCF rs,1
+    
+    BSF rs,0
+    call multi
+    BTFSC band,0
+    BCF rs,0
+
+PRINT
+    MOVFW rs
+    MOVWF PORTB
+    GOTO INICIO
+    
+multi:
+    BCF band,0
+    BCF over,0
+    MOVFW rs
+    MOVWF fact1
+    MOVFW rs
+    MOVWF fact2
+    MOVLW d'0'
+CICLO    
+    ADDWF fact1,0
+    BTFSC STATUS,C
+    BSF over,0
+    DECFSZ fact2
+    GOTO CICLO 
+    MOVWF fact1 ;Ya tenemos el cuadrado
+		
+		
+    MOVFW fact1 ;Hay que comparar si ya pasó a num
+    SUBWF num,0
+    BTFSS STATUS,C ;Si la resta es negativa se quita el bit puesto
+    call mas	
+    
+    BTFSC over,0
+    BSF band,0
+    BTFSS over,0
+    call fin
+return
+    
+fin:
+    BCF over,0
+    MOVFW fact1
+    XORWF num,0
+    MOVWF fact2
+    
+    BTFSC fact2,0
+    BSF over,0
+    BTFSC fact2,1
+    BSF over,0
+    BTFSC fact2,2
+    BSF over,0
+    BTFSC fact2,3
+    BSF over,0
+    BTFSC fact2,4
+    BSF over,0
+    BTFSC fact2,5
+    BSF over,0
+    BTFSC fact2,6
+    BSF over,0
+    BTFSC fact2,7
+    BSF over,0
+    
+    BTFSS over,0
+    GOTO PRINT
+return
+    
+mas:
+    MOVFW num
+    SUBWF fact1,0
+    BTFSS STATUS,C ;Si la resta es negativa se quita el bit puesto
+    return
+    BSF band,0
+return
+END
